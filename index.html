@@ -161,40 +161,130 @@
         // 1. Mock Data for Slides
         const wordsList = [
             {
-                word: "Apple",
-                emoji: "🍎",
-                phonetic: "/ ˈæp(ə)l /",
-                howToRead: "애플",
-                meaning: "사과 (둥글고 달콤한 빨간 과일이에요!)",
-                exampleEn: `I ate a delicious <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">apple</span>.`,
-                exampleKo: "나는 맛있는 사과를 먹었어요."
+                word: "Korea",
+                emoji: "🇰🇷",
+                phonetic: "/ kəˈriːə /",
+                howToRead: "코리아",
+                meaning: "한국 (우리가 살고 있는 아름다운 나라예요!)",
+                exampleEn: `I live in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Korea</span>.`,
+                exampleKo: "나는 한국에 살아요."
             },
             {
-                word: "Banana",
-                emoji: "🍌",
-                phonetic: "/ bəˈnænə /",
-                howToRead: "바나나",
-                meaning: "바나나 (길쭉하고 노란 달콤한 과일이에요!)",
-                exampleEn: `Monkeys love to eat <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">bananas</span>.`,
-                exampleKo: "원숭이들은 바나나 먹는 것을 좋아해요."
+                word: "U.S.",
+                emoji: "🇺🇸",
+                phonetic: "/ ˌjuː ˈes /",
+                howToRead: "유 에스",
+                meaning: "미국 (아메리카 합중국을 줄여서 부르는 이름이에요!)",
+                exampleEn: `She is from the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">U.S.</span>`,
+                exampleKo: "그녀는 미국에서 왔어요."
             },
             {
-                word: "Cat",
-                emoji: "🐱",
-                phonetic: "/ kæt /",
-                howToRead: "캣",
-                meaning: "고양이 (야옹 소리를 내는 귀여운 동물이에요!)",
-                exampleEn: `The cute <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">cat</span> is sleeping.`,
-                exampleKo: "귀여운 고양이가 자고 있어요."
+                word: "France",
+                emoji: "🇫🇷",
+                phonetic: "/ fræns /",
+                howToRead: "프랑스",
+                meaning: "프랑스 (에펠탑이 있는 예쁜 나라예요!)",
+                exampleEn: `Paris is the capital of <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">France</span>.`,
+                exampleKo: "파리는 프랑스의 수도예요."
             },
             {
-                word: "Dog",
-                emoji: "🐶",
-                phonetic: "/ dɔɡ /",
-                howToRead: "도그",
-                meaning: "개 (멍멍 짖으며 사람을 잘 따르는 동물이에요!)",
-                exampleEn: `My <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">dog</span> likes to run in the park.`,
-                exampleKo: "우리 강아지는 공원에서 달리는 것을 좋아해요."
+                word: "U.K.",
+                emoji: "🇬🇧",
+                phonetic: "/ ˌjuː ˈkeɪ /",
+                howToRead: "유 케이",
+                meaning: "영국 (영국을 줄여서 이렇게 불러요!)",
+                exampleEn: `London is a big city in the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">U.K.</span>`,
+                exampleKo: "런던은 영국의 큰 도시예요."
+            },
+            {
+                word: "India",
+                emoji: "🇮🇳",
+                phonetic: "/ ˈɪndiə /",
+                howToRead: "인디아",
+                meaning: "인도 (맛있는 카레로 유명한 나라예요!)",
+                exampleEn: `Tigers live in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">India</span>.`,
+                exampleKo: "호랑이들은 인도에 살아요."
+            },
+            {
+                word: "Vietnam",
+                emoji: "🇻🇳",
+                phonetic: "/ ˌviːetˈnɑːm /",
+                howToRead: "비엣남",
+                meaning: "베트남 (쌀국수가 아주 맛있는 나라예요!)",
+                exampleEn: `I want to travel to <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Vietnam</span>.`,
+                exampleKo: "나는 베트남으로 여행 가고 싶어요."
+            },
+            {
+                word: "Canada",
+                emoji: "🇨🇦",
+                phonetic: "/ ˈkænədə /",
+                howToRead: "캐나다",
+                meaning: "캐나다 (단풍과 눈이 내리는 넓은 나라예요!)",
+                exampleEn: `It is very cold in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Canada</span> today.`,
+                exampleKo: "오늘은 캐나다가 아주 추워요."
+            },
+            {
+                word: "where",
+                emoji: "🗺️",
+                phonetic: "/ wer /",
+                howToRead: "웨어",
+                meaning: "어디 (장소를 물어볼 때 쓰는 말이에요!)",
+                exampleEn: `<span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Where</span> are you from?`,
+                exampleKo: "어디에서 왔나요?"
+            },
+            {
+                word: "from",
+                emoji: "🛤️",
+                phonetic: "/ frəm /",
+                howToRead: "프롬",
+                meaning: "~로부터 (출발점이나 출신을 나타내요!)",
+                exampleEn: `I am <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">from</span> Korea.`,
+                exampleKo: "나는 한국에서 왔어요."
+            },
+            {
+                word: "beautiful",
+                emoji: "✨",
+                phonetic: "/ ˈbjuːtɪfl /",
+                howToRead: "뷰티플",
+                meaning: "아름다운 (아주 예쁘고 멋질 때 써요!)",
+                exampleEn: `Look at the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">beautiful</span> flower.`,
+                exampleKo: "아름다운 꽃을 보세요."
+            },
+            {
+                word: "country",
+                emoji: "🌍",
+                phonetic: "/ ˈkʌntri /",
+                howToRead: "컨트리",
+                meaning: "나라, 국가 (우리가 살고 있는 세계의 여러 나라들을 말해요!)",
+                exampleEn: `Korea is a great <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">country</span>.`,
+                exampleKo: "한국은 훌륭한 나라예요."
+            },
+            {
+                word: "idea",
+                emoji: "💡",
+                phonetic: "/ aɪˈdiːə /",
+                howToRead: "아이디어",
+                meaning: "생각, 아이디어 (머릿속에서 떠오른 좋은 생각이에요!)",
+                exampleEn: `That is a great <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">idea</span>!`,
+                exampleKo: "그것 참 좋은 생각이네요!"
+            },
+            {
+                word: "cousin",
+                emoji: "🧒",
+                phonetic: "/ ˈkʌzn /",
+                howToRead: "커즌",
+                meaning: "사촌 (삼촌이나 이모의 아들, 딸을 말해요!)",
+                exampleEn: `My <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">cousin</span> is playing with me.`,
+                exampleKo: "내 사촌이 나와 함께 놀고 있어요."
+            },
+            {
+                word: "noodles",
+                emoji: "🍜",
+                phonetic: "/ ˈnuːdlz /",
+                howToRead: "누들즈",
+                meaning: "국수 (면으로 만든 맛있는 음식이에요!)",
+                exampleEn: `I like to eat spicy <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">noodles</span>.`,
+                exampleKo: "나는 매운 국수를 먹는 것을 좋아해요."
             }
         ];
 
@@ -216,9 +306,11 @@
         // 3. Render Dots
         function renderDots() {
             slideIndicator.innerHTML = "";
+            // 단어 개수가 많으므로 dot 컨테이너가 줄바꿈되도록 flex-wrap 추가
+            slideIndicator.className = "flex flex-wrap justify-center items-center gap-1.5 px-2";
             wordsList.forEach((_, idx) => {
                 const dot = document.createElement("div");
-                dot.className = `w-3 h-3 rounded-full transition-colors ${idx === currentIndex ? 'bg-pink-400' : 'bg-gray-200'}`;
+                dot.className = `w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${idx === currentIndex ? 'bg-pink-400' : 'bg-gray-200'}`;
                 slideIndicator.appendChild(dot);
             });
         }
