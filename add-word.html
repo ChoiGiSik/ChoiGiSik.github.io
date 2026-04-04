@@ -42,40 +42,7 @@
     </style>
 </head>
 
-<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden relative">
-
-    <!-- Hamburger Menu Button -->
-    <button id="menuOpenBtn" class="fixed top-4 left-4 sm:top-6 sm:left-6 z-30 p-2 sm:p-3 bg-white rounded-xl shadow-md border-2 border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-300"></div>
-
-    <!-- Slide-out Menu -->
-    <nav id="sideMenu" class="fixed top-0 left-0 h-full w-64 bg-pastel-card shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-r-4 border-orange-200">
-        <div class="p-6 border-b-2 border-dashed border-orange-200 flex justify-between items-center bg-orange-50">
-            <h2 class="text-2xl font-bold text-orange-500">✨ 메뉴</h2>
-            <button id="menuCloseBtn" class="text-gray-400 hover:text-orange-500 transition-colors p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <div class="p-6 flex flex-col gap-4 text-xl">
-            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-pink-50 text-gray-700 hover:text-pink-600 transition-colors">
-                <span>🏠</span> 단어 학습 (홈)
-            </a>
-            <a href="add-word.html" class="flex items-center gap-3 p-3 rounded-xl bg-orange-50 text-orange-600 transition-colors shadow-sm border border-orange-100 font-bold">
-                <span>➕</span> 단어 추가하기
-            </a>
-            <a href="delete-word.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-500 transition-colors">
-                <span>🗑️</span> 단어 관리/삭제
-            </a>
-        </div>
-    </nav>
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4">
 
     <header class="text-center mb-8 mt-4">
         <h1 class="text-3xl md:text-5xl font-bold text-pink-500 drop-shadow-md pb-2">
@@ -162,29 +129,6 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Sidebar Navigation DOM Elements
-        const menuOpenBtn = document.getElementById("menuOpenBtn");
-        const menuCloseBtn = document.getElementById("menuCloseBtn");
-        const sideMenu = document.getElementById("sideMenu");
-        const menuOverlay = document.getElementById("menuOverlay");
-
-        // Menu Toggle Logic
-        function toggleMenu(isOpen) {
-            if (isOpen) {
-                menuOverlay.classList.remove("hidden");
-                setTimeout(() => menuOverlay.classList.remove("opacity-0"), 10);
-                sideMenu.classList.remove("-translate-x-full");
-            } else {
-                menuOverlay.classList.add("opacity-0");
-                sideMenu.classList.add("-translate-x-full");
-                setTimeout(() => menuOverlay.classList.add("hidden"), 300);
-            }
-        }
-
-        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
-        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
-        menuOverlay.addEventListener('click', () => toggleMenu(false));
 
         // === 2. DOM 요소 ===
         const inputWord = document.getElementById('inputWord');
