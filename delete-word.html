@@ -29,7 +29,41 @@
         body { font-family: 'Jua', sans-serif; }
     </style>
 </head>
-<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4">
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden relative">
+
+    <!-- Hamburger Menu Button -->
+    <button id="menuOpenBtn" class="fixed top-4 left-4 sm:top-6 sm:left-6 z-30 p-2 sm:p-3 bg-white rounded-xl shadow-md border-2 border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Slide-out Menu -->
+    <nav id="sideMenu" class="fixed top-0 left-0 h-full w-64 bg-pastel-card shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-r-4 border-red-200">
+        <div class="p-6 border-b-2 border-dashed border-red-200 flex justify-between items-center bg-red-50">
+            <h2 class="text-2xl font-bold text-red-500">✨ 메뉴</h2>
+            <button id="menuCloseBtn" class="text-gray-400 hover:text-red-500 transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 text-xl">
+            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-pink-50 text-gray-700 hover:text-pink-600 transition-colors">
+                <span>🏠</span> 단어 학습 (홈)
+            </a>
+            <a href="add-word.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition-colors">
+                <span>➕</span> 단어 추가하기
+            </a>
+            <a href="delete-word.html" class="flex items-center gap-3 p-3 rounded-xl bg-red-50 text-red-600 transition-colors shadow-sm border border-red-100 font-bold">
+                <span>🗑️</span> 단어 관리/삭제
+            </a>
+        </div>
+    </nav>
+
     
     <header class="text-center mb-8 mt-4">
         <h1 class="text-3xl md:text-5xl font-bold text-red-400 drop-shadow-md pb-2">
@@ -44,16 +78,21 @@
         </div>
         
         <div id="wordListContainer" class="hidden">
-            <p class="text-right text-gray-500 mb-4">현재 DB에 총 <span id="totalCount" class="text-pink-500 font-bold text-2xl">0</span>개의 단어가 저장되어 있습니다.</p>
+            <div class="flex flex-col sm:flex-row justify-between items-center sm:items-end mb-4 border-b-2 border-gray-100 pb-4 gap-4">
+                <p class="text-gray-500 text-lg">현재 DB에 총 <span id="totalCount" class="text-pink-500 font-bold text-2xl">0</span>개의 단어가 저장되어 있습니다.</p>
+                <button onclick="deleteAllWords()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto font-bold">
+                    <span>⚠️ 초토화 (전체 삭제)</span>
+                </button>
+            </div>
             
-            <div class="overflow-x-auto rounded-xl border-2 border-gray-100">
-                <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto rounded-xl border-2 border-gray-100 shadow-inner">
+                <table class="w-full min-w-[500px] text-left border-collapse">
                     <thead>
                         <tr class="bg-red-50 border-b-2 border-red-200 text-red-700 text-lg sm:text-xl">
-                            <th class="p-4 w-16">ID</th>
-                            <th class="p-4 w-2/5">영단어 / 이모지</th>
-                            <th class="p-4 w-full">오른쪽 뜻</th>
-                            <th class="p-4 whitespace-nowrap text-center">관리</th>
+                            <th class="p-3 sm:p-4 whitespace-nowrap">ID</th>
+                            <th class="p-3 sm:p-4 whitespace-nowrap text-center">영단어 / 이모지</th>
+                            <th class="p-3 sm:p-4 min-w-[150px]">오른쪽 뜻</th>
+                            <th class="p-3 sm:p-4 whitespace-nowrap text-center">관리</th>
                         </tr>
                     </thead>
                     <tbody id="wordTableBody">
@@ -73,6 +112,29 @@
         const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Sidebar Navigation DOM Elements
+        const menuOpenBtn = document.getElementById("menuOpenBtn");
+        const menuCloseBtn = document.getElementById("menuCloseBtn");
+        const sideMenu = document.getElementById("sideMenu");
+        const menuOverlay = document.getElementById("menuOverlay");
+
+        // Menu Toggle Logic
+        function toggleMenu(isOpen) {
+            if (isOpen) {
+                menuOverlay.classList.remove("hidden");
+                setTimeout(() => menuOverlay.classList.remove("opacity-0"), 10);
+                sideMenu.classList.remove("-translate-x-full");
+            } else {
+                menuOverlay.classList.add("opacity-0");
+                sideMenu.classList.add("-translate-x-full");
+                setTimeout(() => menuOverlay.classList.add("hidden"), 300);
+            }
+        }
+
+        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
+        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
 
         const loading = document.getElementById('loading');
         const wordListContainer = document.getElementById('wordListContainer');
@@ -103,9 +165,9 @@
                         tr.className = "border-b border-gray-100 hover:bg-gray-50 transition-colors";
                         
                         tr.innerHTML = `
-                            <td class="p-4 text-gray-400">${item.id}</td>
-                            <td class="p-4 text-2xl font-bold text-gray-800">${item.word} <span class="text-3xl ml-1">${item.emoji ? item.emoji : ''}</span></td>
-                            <td class="p-4 text-gray-600 text-lg">${item.meaning ? item.meaning : '<span class="text-gray-300">뜻 없음</span>'}</td>
+                            <td class="p-3 sm:p-4 text-gray-400 whitespace-nowrap">${item.id}</td>
+                            <td class="p-3 sm:p-4 text-xl sm:text-2xl font-bold text-gray-800 text-center whitespace-nowrap">${item.word} <span class="text-2xl sm:text-3xl ml-1">${item.emoji ? item.emoji : ''}</span></td>
+                            <td class="p-3 sm:p-4 text-gray-600 text-base sm:text-lg min-w-[150px] break-keep">${item.meaning ? item.meaning : '<span class="text-gray-300">뜻 없음</span>'}</td>
                             <td class="p-4 text-center">
                                 <button onclick="deleteWord(${item.id}, '${item.word.replace(/'/g, "\\'")}')" 
                                     class="bg-red-100 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2 rounded-xl border border-red-200 hover:border-red-500 shadow-sm transition-all active:scale-95 whitespace-nowrap font-bold">
@@ -148,6 +210,32 @@
             } catch (err) {
                 console.error(err);
                 alert(`삭제 실패! 권한 문제가 발생했습니다.\n\n에러 메시지: ${err.message}\n\n👉 관리자에게 'DELETE' 권한 오픈을 요청하세요 (Supabase RLS 체크).`);
+            }
+        };
+
+        // 단어 전체 삭제 함수
+        window.deleteAllWords = async function() {
+            const confirmed1 = confirm("정말로 데이터베이스의 [모든 단어]를 한 번에 삭제하시겠습니까?\n이 작업은 절대 되돌릴 수 없습니다!");
+            if (!confirmed1) return;
+
+            const confirmed2 = confirm("마지막 확인: 진짜로 전부 다 비우시겠습니까? 💥");
+            if (!confirmed2) return;
+
+            try {
+                // Supabase에서 모든 데이터 삭제 (id가 -1이 아닌 모든 행 삭제 = 전체 삭제)
+                const { error } = await supabaseClient
+                    .from('words')
+                    .delete()
+                    .neq('id', -1);
+
+                if (error) throw error; 
+
+                alert(`모든 단어가 깨끗하게 비워졌습니다! 🧹✨`);
+                fetchWords();
+
+            } catch (err) {
+                console.error(err);
+                alert(`전체 삭제 실패!\n\n에러 메시지: ${err.message}\n👉 전체 삭제 권한이 막혀있을 수 있습니다.`);
             }
         };
 
