@@ -42,7 +42,47 @@
     </style>
 </head>
 
-<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4">
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden relative">
+
+    <!-- Hamburger Menu Button -->
+    <button id="menuOpenBtn"
+        class="fixed top-4 left-4 sm:top-6 sm:left-6 z-30 p-2 sm:p-3 bg-white rounded-xl shadow-md border-2 border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Slide-out Menu -->
+    <nav id="sideMenu"
+        class="fixed top-0 left-0 h-full w-64 bg-pastel-card shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-r-4 border-orange-200">
+        <div class="p-6 border-b-2 border-dashed border-orange-200 flex justify-between items-center bg-orange-50">
+            <h2 class="text-2xl font-bold text-orange-500">✨ 메뉴</h2>
+            <button id="menuCloseBtn" class="text-gray-400 hover:text-orange-500 transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 text-xl">
+            <a href="index.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-pink-50 text-gray-700 hover:text-pink-600 transition-colors">
+                <span>🏠</span> 단어 학습 (홈)
+            </a>
+            <a href="add-word.html"
+                class="flex items-center gap-3 p-3 rounded-xl bg-orange-50 text-orange-600 transition-colors shadow-sm border border-orange-100 font-bold">
+                <span>➕</span> 단어 추가하기
+            </a>
+            <a href="delete-word.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-500 transition-colors">
+                <span>🗑️</span> 단어 관리/삭제
+            </a>
+        </div>
+    </nav>
 
     <header class="text-center mb-8 mt-4">
         <h1 class="text-3xl md:text-5xl font-bold text-pink-500 drop-shadow-md pb-2">
@@ -124,11 +164,34 @@
 
     <script>
         // === 1. 설정 ===
-        const GEMINI_API_KEY = "AIzaSyDg63FnQTYRQU0F6XIRGbN35hjrwLTsa9o";
+        let GEMINI_API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
         const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Sidebar Navigation DOM Elements
+        const menuOpenBtn = document.getElementById("menuOpenBtn");
+        const menuCloseBtn = document.getElementById("menuCloseBtn");
+        const sideMenu = document.getElementById("sideMenu");
+        const menuOverlay = document.getElementById("menuOverlay");
+
+        // Menu Toggle Logic
+        function toggleMenu(isOpen) {
+            if (isOpen) {
+                menuOverlay.classList.remove("hidden");
+                setTimeout(() => menuOverlay.classList.remove("opacity-0"), 10);
+                sideMenu.classList.remove("-translate-x-full");
+            } else {
+                menuOverlay.classList.add("opacity-0");
+                sideMenu.classList.add("-translate-x-full");
+                setTimeout(() => menuOverlay.classList.add("hidden"), 300);
+            }
+        }
+
+        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
+        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
 
         // === 2. DOM 요소 ===
         const inputWord = document.getElementById('inputWord');
@@ -152,10 +215,21 @@
                 return;
             }
 
+            if (!GEMINI_API_KEY) {
+                const userInput = prompt("💡 처음 접속하셨군요!\n\n발급받은 구글 Gemini API 키를 입력해 주세요.\n(입력된 키는 서버로 전송되지 않고 이 기기의 브라우저에만 안전하게 기록됩니다.)");
+                if (userInput && userInput.trim() !== "") {
+                    GEMINI_API_KEY = userInput.trim();
+                    localStorage.setItem("GEMINI_API_KEY", GEMINI_API_KEY);
+                } else {
+                    alert("⚠️ API 키가 없으면 마법을 부릴 수 없습니다.");
+                    return;
+                }
+            }
+
             aiBtn.disabled = true;
             aiLoading.classList.remove('hidden');
 
-            const prompt = `너는 초등학교 어린이 영어 교육 앱의 콘텐츠 제작자야.
+            const promptText = `너는 초등학교 어린이 영어 교육 앱의 콘텐츠 제작자야.
 주어진 영단어에 대해 아이들이 재미있고 쉽게 이해할 수 있는 정보를 제공해줘.
 대상 단어: "${word}"
 
@@ -175,7 +249,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
+                        contents: [{ parts: [{ text: promptText }] }],
                         generationConfig: {
                             temperature: 0.7,
                             responseMimeType: "application/json"
@@ -183,7 +257,15 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('API 호출에 실패했습니다. (키가 잘못되었거나 한도 초과일 수 있습니다.)');
+                if (!response.ok) {
+                    if (response.status === 403 || response.status === 400 || response.status === 404) {
+                        // 키가 유출되어 막혔거나 잘못 기입한 경우 로컬스토리지에서 삭제하여 리셋
+                        localStorage.removeItem("GEMINI_API_KEY");
+                        GEMINI_API_KEY = "";
+                        throw new Error(`API 연동 오류 (${response.status}) 🚨\n\n입력하신 키가 잘못되었거나 구글에 의해 사용이 중지되었습니다.\n확인을 누르시고 다시 'AI 자동 완성' 버튼을 클릭하여 새 키를 입력해 주세요.`);
+                    }
+                    throw new Error(`API 호출에 실패했습니다. (HTTP ${response.status})\n잠시 후 다시 시도해 주세요.`);
+                }
 
                 const result = await response.json();
                 let jsonText = result.candidates[0].content.parts[0].text;
