@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어 관리소 🗑️</title>
+    <!-- Supabase JS 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Jua', 'sans-serif'], },
+                    colors: {
+                        pastel: {
+                            bg: '#FFF8E7', primary: '#FFB6C1', secondary: '#AEE1E1', card: '#FFFFFF',
+                            green: '#D4EDDA', purple: '#E2D5F8', orange: '#FFD8A8', red: '#ffcccc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Jua', sans-serif; }
+    </style>
+</head>
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4">
+    
+    <header class="text-center mb-8 mt-4">
+        <h1 class="text-3xl md:text-5xl font-bold text-red-400 drop-shadow-md pb-2">
+            단어 관리소 🗑️
+        </h1>
+        <p class="text-lg md:text-xl mt-4 text-gray-500">불필요한 단어나 테스트 데이터는 여기서 쏙쏙 지워주세요!</p>
+    </header>
+
+    <main class="w-full max-w-4xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-red-200">
+        <div id="loading" class="text-center text-xl text-gray-400 py-10 animate-pulse">
+            단어 목록을 불러오는 중이에요... ⏳
+        </div>
+        
+        <div id="wordListContainer" class="hidden">
+            <p class="text-right text-gray-500 mb-4">현재 DB에 총 <span id="totalCount" class="text-pink-500 font-bold text-2xl">0</span>개의 단어가 저장되어 있습니다.</p>
+            
+            <div class="overflow-x-auto rounded-xl border-2 border-gray-100">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-red-50 border-b-2 border-red-200 text-red-700 text-lg sm:text-xl">
+                            <th class="p-4 w-16">ID</th>
+                            <th class="p-4 w-2/5">영단어 / 이모지</th>
+                            <th class="p-4 w-full">오른쪽 뜻</th>
+                            <th class="p-4 whitespace-nowrap text-center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wordTableBody">
+                        <!-- JS에서 동적으로 채워짐 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div class="mt-8 flex flex-wrap justify-center gap-4 text-xl sm:text-2xl">
+        <a href="index.html" class="px-6 py-3 bg-white rounded-xl shadow border-2 border-gray-200 hover:bg-gray-50 text-gray-700 transition-colors">⬅️ 메인으로 가기</a>
+        <a href="add-word.html" class="px-6 py-3 bg-pastel-orange rounded-xl shadow hover:bg-orange-300 text-orange-900 transition-colors">➕ 단어 추가하기</a>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const loading = document.getElementById('loading');
+        const wordListContainer = document.getElementById('wordListContainer');
+        const wordTableBody = document.getElementById('wordTableBody');
+        const totalCount = document.getElementById('totalCount');
+
+        // 단어 목록 가져오기
+        async function fetchWords() {
+            loading.classList.remove('hidden');
+            wordListContainer.classList.add('hidden');
+            wordTableBody.innerHTML = '';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('words')
+                    .select('id, word, emoji, meaning')
+                    .order('id', { ascending: false }); // 최근 등록순(내림차순)
+
+                if (error) throw error;
+
+                totalCount.innerText = data.length;
+
+                if (data.length === 0) {
+                    wordTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 text-xl">등록된 단어가 방 하나도 없습니다. 텅~빔!</td></tr>`;
+                } else {
+                    data.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = "border-b border-gray-100 hover:bg-gray-50 transition-colors";
+                        
+                        tr.innerHTML = `
+                            <td class="p-4 text-gray-400">${item.id}</td>
+                            <td class="p-4 text-2xl font-bold text-gray-800">${item.word} <span class="text-3xl ml-1">${item.emoji ? item.emoji : ''}</span></td>
+                            <td class="p-4 text-gray-600 text-lg">${item.meaning ? item.meaning : '<span class="text-gray-300">뜻 없음</span>'}</td>
+                            <td class="p-4 text-center">
+                                <button onclick="deleteWord(${item.id}, '${item.word.replace(/'/g, "\\'")}')" 
+                                    class="bg-red-100 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2 rounded-xl border border-red-200 hover:border-red-500 shadow-sm transition-all active:scale-95 whitespace-nowrap font-bold">
+                                    ❌ 삭제
+                                </button>
+                            </td>
+                        `;
+                        wordTableBody.appendChild(tr);
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+                wordTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-400 text-xl font-bold">데이터를 불러오는 데 실패했습니다.<br><span class="text-sm mt-2 font-sans font-normal">${err.message}</span></td></tr>`;
+            } finally {
+                loading.classList.add('hidden');
+                wordListContainer.classList.remove('hidden');
+            }
+        }
+
+        // 단어 삭제 함수
+        window.deleteWord = async function(id, wordText) {
+            const confirmed = confirm(`정말로 [ ${wordText} ] 단어를 데이터베이스에서 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`);
+            if(!confirmed) return;
+
+            try {
+                // Supabase에서 특정 ID 삭제 처리
+                const { error } = await supabaseClient
+                    .from('words')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error; // RLS 에러 발생시 여기로 빠짐
+
+                // 삭제 성공 시 리프레시 방식을 쓸 수도 있지만 전체 새로고침이 UX상 깔끔할 수 있음. 
+                // 혹은 fetchWords() 다시 호출
+                alert(`[ ${wordText} ] 단어가 성공적으로 삭제되었습니다! 🧹`);
+                fetchWords();
+
+            } catch (err) {
+                console.error(err);
+                alert(`삭제 실패! 권한 문제가 발생했습니다.\n\n에러 메시지: ${err.message}\n\n👉 관리자에게 'DELETE' 권한 오픈을 요청하세요 (Supabase RLS 체크).`);
+            }
+        };
+
+        // 페이지가 열리면 즉시 단어 목록 불러오기
+        document.addEventListener('DOMContentLoaded', fetchWords);
+    </script>
+</body>
+</html>
