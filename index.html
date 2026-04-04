@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>신기한 영단어 마법상자 ✨</title>
+    <!-- Supabase JS 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 구글 폰트(Jua: 귀엽고 둥근 한국어 폰트) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,16 +55,54 @@
         }
     </script>
     <style>
-        body { font-family: 'Jua', sans-serif; }
+        body {
+            font-family: 'Jua', sans-serif;
+        }
+
         .text-outline {
             -webkit-text-stroke: 1.5px #fff;
         }
+
         ::placeholder {
             color: #d1d5db;
         }
     </style>
 </head>
-<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden">
+
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden relative">
+
+    <!-- Hamburger Menu Button -->
+    <button id="menuOpenBtn" class="fixed top-4 left-4 sm:top-6 sm:left-6 z-30 p-2 sm:p-3 bg-white rounded-xl shadow-md border-2 border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Slide-out Menu -->
+    <nav id="sideMenu" class="fixed top-0 left-0 h-full w-64 bg-pastel-card shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-r-4 border-pink-200">
+        <div class="p-6 border-b-2 border-dashed border-pink-200 flex justify-between items-center bg-pink-50">
+            <h2 class="text-2xl font-bold text-pink-500">✨ 메뉴</h2>
+            <button id="menuCloseBtn" class="text-gray-400 hover:text-pink-500 transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 text-xl">
+            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl bg-pink-50 text-pink-600 transition-colors shadow-sm border border-pink-100 font-bold">
+                <span>🏠</span> 단어 학습 (홈)
+            </a>
+            <a href="add-word.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition-colors">
+                <span>➕</span> 단어 추가하기
+            </a>
+            <a href="delete-word.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-500 transition-colors">
+                <span>🗑️</span> 단어 관리/삭제
+            </a>
+        </div>
+    </nav>
 
     <!-- Header Section -->
     <header class="text-center mb-8 mt-4 animate-float">
@@ -72,46 +113,46 @@
     </header>
 
     <!-- Search Section -->
-    <main class="w-full max-w-2xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary relative z-20">
-        
-        <!-- Input Area -->
-        <div class="flex flex-col md:flex-row gap-4 items-center">
-            <input type="text" id="wordInput" 
-                class="w-full text-2xl md:text-3xl p-4 border-4 border-pastel-orange rounded-2xl focus:outline-none focus:border-pink-400 text-center text-gray-700 bg-orange-50 transition-colors" 
-                placeholder="영단어를 적어봐!" autocomplete="off">
-            <button class="w-full md:w-auto bg-pastel-primary hover:bg-pink-400 transition-colors text-white text-2xl md:text-3xl px-8 py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 group whitespace-nowrap">
-                찾기 <span class="group-hover:rotate-12 transition-transform inline-block">🔍</span>
-            </button>
-        </div>
+    <main
+        class="w-full max-w-2xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary relative z-20">
 
-        <!-- Result Section (Mockup / Initially visible for demo purposes) -->
-        <div id="resultArea" class="mt-10 pt-8 border-t-4 border-dashed border-pastel-secondary relative">
-            
+        <!-- Result Section (Main Word Display) -->
+        <div id="resultArea" class="relative">
+
             <!-- "참 잘했어요" Stamp Animation (Mockup state) -->
-            <div class="absolute -top-12 -right-8 md:-right-12 w-28 h-28 md:w-36 md:h-36 bg-red-100 text-red-500 rounded-full flex items-center justify-center border-4 border-red-500 animate-stamp shadow-lg z-30 select-none">
+            <div id="greatJobStamp"
+                class="hidden absolute -top-12 -right-8 md:-right-12 w-28 h-28 md:w-36 md:h-36 bg-red-100 text-red-500 rounded-full flex items-center justify-center border-4 border-red-500 animate-stamp shadow-lg z-30 select-none">
                 <span class="text-2xl md:text-3xl text-center leading-tight font-bold rotate-[-5deg]">참!<br>잘했어요</span>
             </div>
 
             <!-- Header of Result: Word and Pronunciation -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
+            <div class="flex flex-row justify-between items-start mb-6 gap-3 sm:gap-4 relative">
+                <div class="flex-1 overflow-visible">
                     <!-- English Word -->
-                    <h2 id="wordTitle" class="text-5xl md:text-6xl text-purple-600 drop-shadow-sm flex items-center gap-2">
+                    <h2 id="wordTitle"
+                        class="text-4xl sm:text-5xl md:text-6xl text-purple-600 drop-shadow-sm flex items-center gap-2 flex-wrap break-keep">
                         Apple 🍎
                     </h2>
-                    <div class="flex flex-wrap items-center gap-3 mt-3">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
                         <!-- Phonetic Symbol -->
-                        <span id="wordPhonetic" class="text-2xl md:text-3xl text-gray-400 font-sans tracking-wide font-bold">/ ˈæp(ə)l /</span>
+                        <span id="wordPhonetic"
+                            class="text-xl sm:text-2xl md:text-3xl text-gray-400 font-sans tracking-wide font-bold">/ ˈæp(ə)l /</span>
                         <!-- Korean Reading Guide -->
-                        <span id="wordHowToRead" class="bg-pastel-secondary px-4 py-1.5 rounded-full text-xl md:text-2xl text-teal-800 shadow-sm mt-1 sm:mt-0">애플</span>
+                        <span id="wordHowToRead"
+                            class="bg-pastel-secondary px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-lg sm:text-xl md:text-2xl text-teal-800 shadow-sm whitespace-nowrap mt-1 sm:mt-0">애플</span>
                     </div>
                 </div>
-                
+
                 <!-- TTS Audio Button -->
-                <button id="ttsButton" class="bg-yellow-400 hover:bg-yellow-500 text-white rounded-2xl p-4 md:p-5 shadow-[0_4px_0_#b45309] hover:shadow-[0_2px_0_#b45309] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none transition-all flex items-center gap-2 flex-shrink-0 group" title="발음 듣기">
-                    <span class="text-2xl hidden md:inline-block">듣기</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10 text-white group-active:scale-95 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
+                <button id="ttsButton"
+                    class="bg-yellow-400 hover:bg-yellow-500 text-white rounded-2xl p-3 sm:p-4 md:p-5 shadow-[0_4px_0_#b45309] hover:shadow-[0_2px_0_#b45309] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center flex-shrink-0 group mt-1"
+                    title="발음 듣기">
+                    <span class="text-2xl hidden md:inline-block mr-2">듣기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 text-white group-active:scale-95 transition-transform"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
                     </svg>
                 </button>
             </div>
@@ -119,7 +160,8 @@
             <!-- Meaning & Example -->
             <div class="space-y-5">
                 <!-- Meaning Box -->
-                <div class="bg-pastel-green rounded-2xl p-5 md:p-6 shadow-sm border-2 border-green-200 hover:shadow-md transition-shadow">
+                <div
+                    class="bg-pastel-green rounded-2xl p-5 md:p-6 shadow-sm border-2 border-green-200 hover:shadow-md transition-shadow">
                     <h3 class="text-xl md:text-2xl text-green-700 mb-2 flex items-center gap-2">
                         <span class="text-2xl">💡</span> 뜻이 뭘까요?
                     </h3>
@@ -127,23 +169,30 @@
                 </div>
 
                 <!-- Example Sentence Box -->
-                <div class="bg-pastel-purple rounded-2xl p-5 md:p-6 shadow-sm border-2 border-purple-200 hover:shadow-md transition-shadow">
+                <div
+                    class="bg-pastel-purple rounded-2xl p-5 md:p-6 shadow-sm border-2 border-purple-200 hover:shadow-md transition-shadow">
                     <h3 class="text-xl md:text-2xl text-purple-700 mb-3 flex items-center gap-2">
                         <span class="text-2xl">📝</span> 문장으로 배워요!
                     </h3>
-                    <p id="wordExampleEn" class="text-2xl md:text-3xl text-gray-800 mb-2 font-sans font-bold tracking-tight">I ate a delicious <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">apple</span>.</p>
+                    <p id="wordExampleEn"
+                        class="text-2xl md:text-3xl text-gray-800 mb-2 font-sans font-bold tracking-tight">I ate a
+                        delicious <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">apple</span>.</p>
                     <p id="wordExampleKo" class="text-xl md:text-2xl text-gray-600">나는 맛있는 사과를 먹었어요.</p>
                 </div>
             </div>
 
             <!-- Slide Controls -->
             <div class="flex justify-between items-center mt-8 pt-6 border-t-2 border-dashed border-gray-200">
-                <button id="prevBtn" class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
-                    <span class="text-xl sm:text-2xl">◀️</span> <span class="hidden sm:inline-block text-xl md:text-2xl">이전 단어</span>
+                <button id="prevBtn"
+                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
+                    <span class="text-xl sm:text-2xl">◀️</span> <span
+                        class="hidden sm:inline-block text-xl md:text-2xl">이전 단어</span>
                 </button>
                 <div id="slideIndicator" class="flex items-center gap-2"></div>
-                <button id="nextBtn" class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
-                    <span class="hidden sm:inline-block text-xl md:text-2xl">다음 단어</span> <span class="text-xl sm:text-2xl">▶️</span>
+                <button id="nextBtn"
+                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
+                    <span class="hidden sm:inline-block text-xl md:text-2xl">다음 단어</span> <span
+                        class="text-xl sm:text-2xl">▶️</span>
                 </button>
             </div>
 
@@ -158,136 +207,12 @@
 
     <!-- Simple interaction script with Slider -->
     <script>
-        // 1. Mock Data for Slides
-        const wordsList = [
-            {
-                word: "Korea",
-                emoji: "🇰🇷",
-                phonetic: "/ kəˈriːə /",
-                howToRead: "코리아",
-                meaning: "한국 (우리가 살고 있는 아름다운 나라예요!)",
-                exampleEn: `I live in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Korea</span>.`,
-                exampleKo: "나는 한국에 살아요."
-            },
-            {
-                word: "U.S.",
-                emoji: "🇺🇸",
-                phonetic: "/ ˌjuː ˈes /",
-                howToRead: "유 에스",
-                meaning: "미국 (아메리카 합중국을 줄여서 부르는 이름이에요!)",
-                exampleEn: `She is from the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">U.S.</span>`,
-                exampleKo: "그녀는 미국에서 왔어요."
-            },
-            {
-                word: "France",
-                emoji: "🇫🇷",
-                phonetic: "/ fræns /",
-                howToRead: "프랑스",
-                meaning: "프랑스 (에펠탑이 있는 예쁜 나라예요!)",
-                exampleEn: `Paris is the capital of <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">France</span>.`,
-                exampleKo: "파리는 프랑스의 수도예요."
-            },
-            {
-                word: "U.K.",
-                emoji: "🇬🇧",
-                phonetic: "/ ˌjuː ˈkeɪ /",
-                howToRead: "유 케이",
-                meaning: "영국 (영국을 줄여서 이렇게 불러요!)",
-                exampleEn: `London is a big city in the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">U.K.</span>`,
-                exampleKo: "런던은 영국의 큰 도시예요."
-            },
-            {
-                word: "India",
-                emoji: "🇮🇳",
-                phonetic: "/ ˈɪndiə /",
-                howToRead: "인디아",
-                meaning: "인도 (맛있는 카레로 유명한 나라예요!)",
-                exampleEn: `Tigers live in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">India</span>.`,
-                exampleKo: "호랑이들은 인도에 살아요."
-            },
-            {
-                word: "Vietnam",
-                emoji: "🇻🇳",
-                phonetic: "/ ˌviːetˈnɑːm /",
-                howToRead: "비엣남",
-                meaning: "베트남 (쌀국수가 아주 맛있는 나라예요!)",
-                exampleEn: `I want to travel to <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Vietnam</span>.`,
-                exampleKo: "나는 베트남으로 여행 가고 싶어요."
-            },
-            {
-                word: "Canada",
-                emoji: "🇨🇦",
-                phonetic: "/ ˈkænədə /",
-                howToRead: "캐나다",
-                meaning: "캐나다 (단풍과 눈이 내리는 넓은 나라예요!)",
-                exampleEn: `It is very cold in <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Canada</span> today.`,
-                exampleKo: "오늘은 캐나다가 아주 추워요."
-            },
-            {
-                word: "where",
-                emoji: "🗺️",
-                phonetic: "/ wer /",
-                howToRead: "웨어",
-                meaning: "어디 (장소를 물어볼 때 쓰는 말이에요!)",
-                exampleEn: `<span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">Where</span> are you from?`,
-                exampleKo: "어디에서 왔나요?"
-            },
-            {
-                word: "from",
-                emoji: "🛤️",
-                phonetic: "/ frəm /",
-                howToRead: "프롬",
-                meaning: "~로부터 (출발점이나 출신을 나타내요!)",
-                exampleEn: `I am <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">from</span> Korea.`,
-                exampleKo: "나는 한국에서 왔어요."
-            },
-            {
-                word: "beautiful",
-                emoji: "✨",
-                phonetic: "/ ˈbjuːtɪfl /",
-                howToRead: "뷰티플",
-                meaning: "아름다운 (아주 예쁘고 멋질 때 써요!)",
-                exampleEn: `Look at the <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">beautiful</span> flower.`,
-                exampleKo: "아름다운 꽃을 보세요."
-            },
-            {
-                word: "country",
-                emoji: "🌍",
-                phonetic: "/ ˈkʌntri /",
-                howToRead: "컨트리",
-                meaning: "나라, 국가 (우리가 살고 있는 세계의 여러 나라들을 말해요!)",
-                exampleEn: `Korea is a great <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">country</span>.`,
-                exampleKo: "한국은 훌륭한 나라예요."
-            },
-            {
-                word: "idea",
-                emoji: "💡",
-                phonetic: "/ aɪˈdiːə /",
-                howToRead: "아이디어",
-                meaning: "생각, 아이디어 (머릿속에서 떠오른 좋은 생각이에요!)",
-                exampleEn: `That is a great <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">idea</span>!`,
-                exampleKo: "그것 참 좋은 생각이네요!"
-            },
-            {
-                word: "cousin",
-                emoji: "🧒",
-                phonetic: "/ ˈkʌzn /",
-                howToRead: "커즌",
-                meaning: "사촌 (삼촌이나 이모의 아들, 딸을 말해요!)",
-                exampleEn: `My <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">cousin</span> is playing with me.`,
-                exampleKo: "내 사촌이 나와 함께 놀고 있어요."
-            },
-            {
-                word: "noodles",
-                emoji: "🍜",
-                phonetic: "/ ˈnuːdlz /",
-                howToRead: "누들즈",
-                meaning: "국수 (면으로 만든 맛있는 음식이에요!)",
-                exampleEn: `I like to eat spicy <span class="bg-yellow-200 px-2 rounded-lg text-purple-900 mx-1">noodles</span>.`,
-                exampleKo: "나는 매운 국수를 먹는 것을 좋아해요."
-            }
-        ];
+        // 1. Supabase Initialization & Data Fetching
+        const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let wordsList = []; // 데이터가 들어갈 배열
         let currentIndex = 0;
 
         // 2. DOM Elements
@@ -302,6 +227,31 @@
         const nextBtn = document.getElementById("nextBtn");
         const slideIndicator = document.getElementById("slideIndicator");
         const resultArea = document.getElementById("resultArea");
+        const greatJobStamp = document.getElementById("greatJobStamp");
+
+        // Sidebar Navigation DOM Elements
+        const menuOpenBtn = document.getElementById("menuOpenBtn");
+        const menuCloseBtn = document.getElementById("menuCloseBtn");
+        const sideMenu = document.getElementById("sideMenu");
+        const menuOverlay = document.getElementById("menuOverlay");
+
+        // 2-1. Navigation Menu Toggle Logic
+        function toggleMenu(isOpen) {
+            if (isOpen) {
+                menuOverlay.classList.remove("hidden");
+                // setTimeout ensures CSS transition applies after display:block
+                setTimeout(() => menuOverlay.classList.remove("opacity-0"), 10);
+                sideMenu.classList.remove("-translate-x-full");
+            } else {
+                menuOverlay.classList.add("opacity-0");
+                sideMenu.classList.add("-translate-x-full");
+                setTimeout(() => menuOverlay.classList.add("hidden"), 300); // Wait for transition
+            }
+        }
+
+        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
+        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
 
         // 3. Render Dots
         function renderDots() {
@@ -318,11 +268,14 @@
         // 4. Render Word
         function renderWord(index) {
             const data = wordsList[index];
-            
+
+            // 새 단어 로드 시 도장 숨기기
+            greatJobStamp.classList.add('hidden');
+
             // Fade out effect
             resultArea.classList.remove("opacity-100");
             resultArea.classList.add("opacity-50", "transition-opacity", "duration-300");
-            
+
             setTimeout(() => {
                 wordTitle.innerHTML = `${data.word} ${data.emoji}`;
                 wordPhonetic.textContent = data.phonetic;
@@ -331,7 +284,7 @@
                 wordExampleEn.innerHTML = data.exampleEn;
                 wordExampleKo.textContent = data.exampleKo;
                 renderDots();
-                
+
                 // Fade in effect
                 resultArea.classList.remove("opacity-50");
                 resultArea.classList.add("opacity-100");
@@ -358,23 +311,88 @@
         });
 
         // 6. Web Speech API for TTS
-        if('speechSynthesis' in window) {
+        let currentUtterance; // 전역 변수로 선언하여 모바일 Safari(iOS) 가비지 컬렉션에 의해 음성이 끊기는 버그 방지
+
+        if ('speechSynthesis' in window) {
             ttsButton.addEventListener('click', () => {
-                const utterance = new SpeechSynthesisUtterance(wordsList[currentIndex].word);
-                utterance.lang = 'en-US';
+                // 이전에 재생 중이거나 대기/오류 상태인 음성을 완전히 강제 종료 및 초기화 (모바일 멈춤 버그 핵심 해결책)
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.resume();
+
+                currentUtterance = new SpeechSynthesisUtterance(wordsList[currentIndex].word);
+                currentUtterance.lang = 'en-US';
                 // 아이들에게 친근한 높은 톤의 속도로 설정
-                utterance.pitch = 1.3;
-                utterance.rate = 0.9;
-                window.speechSynthesis.speak(utterance);
+                currentUtterance.pitch = 1.3;
+                currentUtterance.rate = 0.9;
                 
+                window.speechSynthesis.speak(currentUtterance);
+
                 // 버튼 피드백 애니메이션
                 ttsButton.classList.add('animate-pulse');
                 setTimeout(() => ttsButton.classList.remove('animate-pulse'), 1000);
+
+                // 듣기 버튼 클릭 시 '참 잘했어요' 도장 노출
+                greatJobStamp.classList.remove('hidden');
             });
         }
 
-        // Initialize First Word
-        renderWord(currentIndex);
+        // 7. Supabase에서 데이터 가져오기
+        async function fetchWords() {
+            try {
+                // 초기에 흐리게 처리
+                resultArea.classList.remove("opacity-100");
+                resultArea.classList.add("opacity-50");
+
+                const { data, error } = await supabaseClient.from('words').select('*').order('id', { ascending: true });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data && data.length > 0) {
+                    wordsList = data.map(item => ({
+                        word: item.word,
+                        emoji: item.emoji || "",
+                        phonetic: item.phonetic || "",
+                        howToRead: item.how_to_read || "",
+                        meaning: item.meaning || "",
+                        exampleEn: item.example_en || "",
+                        exampleKo: item.example_ko || ""
+                    }));
+
+                    currentIndex = 0;
+                    renderWord(currentIndex);
+                } else {
+                    // 데이터가 0건인 경우 안내 표시
+                    wordTitle.innerHTML = `데이터 없음 😢`;
+                    wordPhonetic.textContent = "";
+                    wordHowToRead.textContent = "?";
+                    wordMeaning.textContent = "테이블에 데이터가 없거나, RLS 정책 문제일 수 있습니다.";
+                    wordExampleEn.innerHTML = "No data found in Supabase.";
+                    wordExampleKo.textContent = "";
+
+                    resultArea.classList.remove("opacity-50");
+                    resultArea.classList.add("opacity-100");
+                }
+            } catch (error) {
+                console.error("데이터 불러오기 에러:", error);
+
+                // 에러 발생 시 UI 에러 표시
+                wordTitle.innerHTML = `불러오기 에러 🚫`;
+                wordPhonetic.textContent = "";
+                wordHowToRead.textContent = "에러";
+                wordMeaning.textContent = `Supabase 연동 오류: ${error.message}`;
+                wordExampleEn.innerHTML = "Please check console and Supabase settings.";
+                wordExampleKo.textContent = "";
+
+                resultArea.classList.remove("opacity-50");
+                resultArea.classList.add("opacity-100");
+            }
+        }
+
+        // Initialize
+        fetchWords();
     </script>
 </body>
+
 </html>
