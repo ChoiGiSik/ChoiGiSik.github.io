@@ -117,6 +117,13 @@
         <!-- 단계 2: 정보 확인 및 저장 -->
         <h2 class="text-2xl text-purple-600 mb-4 flex items-center gap-2">📝 내용 확인하기</h2>
         <div class="space-y-4">
+            <!-- 단원 입력 (NEW) -->
+            <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm">
+                <label class="block text-blue-700 font-bold mb-1">📚 등록할 강의/단원명 (자동 저장됩니다)</label>
+                <input type="text" id="f_lesson" class="w-full p-3 border-2 border-blue-300 rounded-lg text-xl focus:border-blue-500 outline-none"
+                    placeholder="예: 1단원, 유닛 3, 동물들">
+            </div>
+
             <div class="flex flex-col sm:flex-row gap-4">
                 <div class="flex-1">
                     <label class="block text-gray-500 mb-1">이모지</label>
@@ -209,6 +216,10 @@
         const f_meaning = document.getElementById('f_meaning');
         const f_exampleEn = document.getElementById('f_exampleEn');
         const f_exampleKo = document.getElementById('f_exampleKo');
+        const f_lesson = document.getElementById('f_lesson');
+
+        // 초기 화면 접속 시 마지막 사용 강의명 로드
+        f_lesson.value = localStorage.getItem("LAST_USED_LESSON") || "미지정";
 
         // === 3. Gemini API 호출 ===
         aiBtn.addEventListener('click', async () => {
@@ -305,7 +316,8 @@
                 how_to_read: f_howToRead.value.trim(),
                 meaning: f_meaning.value.trim(),
                 example_en: f_exampleEn.value.trim(),
-                example_ko: f_exampleKo.value.trim()
+                example_ko: f_exampleKo.value.trim(),
+                lesson: f_lesson.value.trim() || '미지정'
             };
 
             if (!wordData.word) {
@@ -327,6 +339,7 @@
                 alert("🎉 데이터가 성공적으로 저장되었습니다!");
 
                 // 저장 성공 시 입력폼 자동 초기화
+                localStorage.setItem("LAST_USED_LESSON", f_lesson.value.trim());
                 inputWord.value = "";
                 f_emoji.value = "";
                 f_phonetic.value = "";

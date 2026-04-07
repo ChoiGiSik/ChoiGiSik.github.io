@@ -96,17 +96,27 @@
     </header>
 
     <main class="w-full max-w-4xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary">
-        
+
+        <!-- 단원 입력 -->
+        <div class="mb-6 p-4 bg-blue-100 rounded-2xl border-2 border-blue-300 shadow-sm text-center">
+            <label class="block text-blue-800 font-bold text-xl mb-2">📚 사진 속 단어들이 들어갈 강의명</label>
+            <input type="text" id="f_lesson" class="w-full max-w-sm mx-auto block p-3 border-2 border-blue-400 rounded-lg text-xl focus:border-blue-600 outline-none text-center"
+                placeholder="예: 1단원, 유닛 3">
+        </div>
+
         <!-- 업로드 영역 -->
         <div class="mb-8 p-6 bg-blue-50 rounded-2xl border-2 border-pastel-blue shadow-inner text-center">
-            <label for="imageInput" class="cursor-pointer flex flex-col items-center justify-center p-8 bg-white border-4 border-dashed border-blue-300 rounded-2xl hover:bg-blue-100 transition-colors">
+            <label for="imageInput"
+                class="cursor-pointer flex flex-col items-center justify-center p-8 bg-white border-4 border-dashed border-blue-300 rounded-2xl hover:bg-blue-100 transition-colors">
                 <span class="text-6xl mb-4 text-blue-400">📸</span>
                 <span class="text-2xl text-blue-600 font-bold text-center">여기를 눌러 사진을 찍거나 고르세요!</span>
                 <input type="file" id="imageInput" accept="image/*" class="hidden">
             </label>
             <div id="imagePreviewContainer" class="hidden mt-6 flex flex-col items-center">
-                <img id="imagePreview" src="" alt="미리보기" class="max-h-64 rounded-xl border-4 border-purple-200 shadow-md">
-                <button id="extractBtn" class="mt-4 bg-purple-500 hover:bg-purple-600 text-white text-2xl font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95">
+                <img id="imagePreview" src="" alt="미리보기"
+                    class="max-h-64 rounded-xl border-4 border-purple-200 shadow-md">
+                <button id="extractBtn"
+                    class="mt-4 bg-purple-500 hover:bg-purple-600 text-white text-2xl font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95">
                     ✨ 마법으로 단어 찾기 ✨
                 </button>
             </div>
@@ -134,7 +144,8 @@
                 </table>
             </div>
 
-            <button id="saveAllBtn" class="w-full bg-pastel-primary hover:bg-pink-500 text-white text-3xl font-bold py-4 px-6 rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50">
+            <button id="saveAllBtn"
+                class="w-full bg-pastel-primary hover:bg-pink-500 text-white text-3xl font-bold py-4 px-6 rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50">
                 <span>저장소에 전부 쏙~ 넣기! 🎁</span>
             </button>
         </div>
@@ -180,10 +191,13 @@
         const imagePreview = document.getElementById('imagePreview');
         const extractBtn = document.getElementById('extractBtn');
         const aiLoading = document.getElementById('aiLoading');
-        
+
         const resultContainer = document.getElementById('resultContainer');
         const extractedWordsBody = document.getElementById('extractedWordsBody');
         const saveAllBtn = document.getElementById('saveAllBtn');
+        const f_lesson = document.getElementById('f_lesson');
+
+        f_lesson.value = localStorage.getItem("LAST_USED_LESSON") || "미지정";
 
         // === 3. 이미지 업로드 로직 ===
         imageInput.addEventListener('change', function (e) {
@@ -278,7 +292,7 @@
 
                 const result = await response.json();
                 let jsonText = result.candidates[0].content.parts[0].text;
-                
+
                 // 마크다운 흔적 제거 처리
                 jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
 
@@ -330,7 +344,7 @@
         }
 
         // 특정 단어 리스트에서 제외 (저장하지 않음)
-        window.removeWordFromList = function(index) {
+        window.removeWordFromList = function (index) {
             extractedWords.splice(index, 1);
             if (extractedWords.length === 0) {
                 resultContainer.classList.add('hidden');
@@ -343,8 +357,14 @@
         saveAllBtn.addEventListener('click', async () => {
             if (extractedWords.length === 0) return;
 
-            const confirmed = confirm(`총 ${extractedWords.length}개의 단어를 단어장에 쏙~ 저장할까요? 🎁`);
+            const lessonName = f_lesson.value.trim() || '미지정';
+            localStorage.setItem("LAST_USED_LESSON", lessonName);
+
+            const confirmed = confirm(`총 ${extractedWords.length}개의 단어를 '${lessonName}' 단어장에 쏙~ 저장할까요? 🎁`);
             if (!confirmed) return;
+
+            // 각 단어에 사용자가 입력한 lesson 값을 추가하여 저장할 배열 생성
+            const wordsToInsert = extractedWords.map(w => ({ ...w, lesson: lessonName }));
 
             saveAllBtn.disabled = true;
             saveAllBtn.innerHTML = "열심히 저장하는 중... ⏳";
@@ -353,7 +373,7 @@
                 // Supabase 다중 insert 구문 (배열 통째로 넣기)
                 const { error } = await supabaseClient
                     .from('words')
-                    .insert(extractedWords);
+                    .insert(wordsToInsert);
 
                 if (error) {
                     throw error;

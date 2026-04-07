@@ -127,6 +127,14 @@
     <main
         class="w-full max-w-2xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary relative z-20">
 
+        <!-- Lesson Filter -->
+        <div class="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded-2xl border-2 border-dashed border-pink-200">
+            <label for="lessonFilter" class="text-gray-600 font-bold text-lg sm:text-xl">📚 배울 강의 선택</label>
+            <select id="lessonFilter" class="bg-white border-2 border-pink-300 text-pink-600 rounded-xl px-4 py-2 text-lg font-bold focus:outline-none focus:ring-4 focus:ring-pink-100 cursor-pointer shadow-sm">
+                <option value="ALL">전체 강의</option>
+            </select>
+        </div>
+
         <!-- Result Section (Main Word Display) -->
         <div id="resultArea" class="relative">
 
@@ -219,7 +227,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let wordsList = []; // 데이터가 들어갈 배열
+        let allWordsRaw = []; // DB에서 가져온 원본 전체 데이터
+        let wordsList = []; // 현재 필터링되어 화면에 표시할 데이터
         let currentIndex = 0;
 
         // 2. DOM Elements
@@ -234,6 +243,7 @@
         const nextBtn = document.getElementById("nextBtn");
         const slideIndicator = document.getElementById("slideIndicator");
         const resultArea = document.getElementById("resultArea");
+        const lessonFilter = document.getElementById("lessonFilter");
 
         // Sidebar Navigation DOM Elements
         const menuOpenBtn = document.getElementById("menuOpenBtn");
@@ -263,12 +273,12 @@
         function renderDots() {
             slideIndicator.innerHTML = "";
             slideIndicator.className = "flex justify-center items-center px-5 py-2 bg-gray-50 rounded-full border-2 border-dashed border-gray-200 shadow-inner";
-            
+
             const numberText = document.createElement("span");
             numberText.className = "text-xl md:text-2xl font-bold text-gray-400 tracking-widest font-sans";
             // ex: 1 / 50
             numberText.innerHTML = `<span class="text-pink-500">${currentIndex + 1}</span> / ${wordsList.length}`;
-            
+
             slideIndicator.appendChild(numberText);
         }
 
@@ -385,29 +395,24 @@
                 }
 
                 if (data && data.length > 0) {
-                    wordsList = data.map(item => ({
+                    allWordsRaw = data.map(item => ({
                         word: item.word,
                         emoji: item.emoji || "",
                         phonetic: item.phonetic || "",
                         howToRead: item.how_to_read || "",
                         meaning: item.meaning || "",
                         exampleEn: item.example_en || "",
-                        exampleKo: item.example_ko || ""
+                        exampleKo: item.example_ko || "",
+                        lesson: item.lesson || "미지정"
                     }));
 
-                    currentIndex = 0;
-                    renderWord(currentIndex);
+                    // 강의 목록 추출 및 드롭다운 세팅
+                    populateLessonFilter();
+                    applyLessonFilter();
+                    
                 } else {
                     // 데이터가 0건인 경우 안내 표시
-                    wordTitle.innerHTML = `데이터 없음 😢`;
-                    wordPhonetic.textContent = "";
-                    wordHowToRead.textContent = "?";
-                    wordMeaning.textContent = "테이블에 데이터가 없거나, RLS 정책 문제일 수 있습니다.";
-                    wordExampleEn.innerHTML = "No data found in Supabase.";
-                    wordExampleKo.textContent = "";
-
-                    resultArea.classList.remove("opacity-50");
-                    resultArea.classList.add("opacity-100");
+                    showEmptyData();
                 }
             } catch (error) {
                 console.error("데이터 불러오기 에러:", error);
@@ -423,6 +428,62 @@
                 resultArea.classList.remove("opacity-50");
                 resultArea.classList.add("opacity-100");
             }
+        }
+
+        function populateLessonFilter() {
+            // "ALL" 제외한 유니크 강의 목록
+            const uniqueLessons = [...new Set(allWordsRaw.map(w => String(w.lesson)))];
+            
+            // 현재 선택값 기억 (리렌더링 시 유지)
+            const currentSelection = lessonFilter.value;
+
+            lessonFilter.innerHTML = '<option value="ALL">전체 강의</option>';
+            uniqueLessons.forEach(lesson => {
+                const opt = document.createElement('option');
+                opt.value = lesson;
+                opt.textContent = lesson;
+                lessonFilter.appendChild(opt);
+            });
+
+            // 옵션 중에 기존 선택값이 있다면 복구
+            if (Array.from(lessonFilter.options).some(o => o.value === currentSelection)) {
+                lessonFilter.value = currentSelection;
+            } else {
+                lessonFilter.value = "ALL";
+            }
+        }
+
+        function applyLessonFilter() {
+            const selected = lessonFilter.value;
+            if (selected === "ALL") {
+                wordsList = [...allWordsRaw];
+            } else {
+                wordsList = allWordsRaw.filter(w => String(w.lesson) === selected);
+            }
+
+            if (wordsList.length > 0) {
+                currentIndex = 0;
+                renderWord(currentIndex);
+            } else {
+                showEmptyData();
+            }
+        }
+
+        lessonFilter.addEventListener('change', () => {
+            applyLessonFilter();
+        });
+
+        function showEmptyData() {
+            wordTitle.innerHTML = `데이터 없음 😢`;
+            wordPhonetic.textContent = "";
+            wordHowToRead.textContent = "?";
+            wordMeaning.textContent = "조건에 맞는 단어가 없습니다.";
+            wordExampleEn.innerHTML = "";
+            wordExampleKo.textContent = "";
+            slideIndicator.innerHTML = "";
+
+            resultArea.classList.remove("opacity-50");
+            resultArea.classList.add("opacity-100");
         }
 
         // Initialize
