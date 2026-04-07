@@ -191,13 +191,13 @@
             <!-- Slide Controls -->
             <div class="flex justify-between items-center mt-8 pt-6 border-t-2 border-dashed border-gray-200">
                 <button id="prevBtn"
-                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
+                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95 whitespace-nowrap">
                     <span class="text-xl sm:text-2xl">◀️</span> <span
                         class="hidden sm:inline-block text-xl md:text-2xl">이전 단어</span>
                 </button>
                 <div id="slideIndicator" class="flex items-center gap-2"></div>
                 <button id="nextBtn"
-                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95">
+                    class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl border-2 border-gray-200 shadow-sm flex items-center gap-1 sm:gap-2 transition-colors active:scale-95 whitespace-nowrap">
                     <span class="hidden sm:inline-block text-xl md:text-2xl">다음 단어</span> <span
                         class="text-xl sm:text-2xl">▶️</span>
                 </button>
@@ -259,16 +259,17 @@
         menuCloseBtn.addEventListener('click', () => toggleMenu(false));
         menuOverlay.addEventListener('click', () => toggleMenu(false));
 
-        // 3. Render Dots
+        // 3. Render Pagination (Numbering)
         function renderDots() {
             slideIndicator.innerHTML = "";
-            // 단어 개수가 많으므로 dot 컨테이너가 줄바꿈되도록 flex-wrap 추가
-            slideIndicator.className = "flex flex-wrap justify-center items-center gap-1.5 px-2";
-            wordsList.forEach((_, idx) => {
-                const dot = document.createElement("div");
-                dot.className = `w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${idx === currentIndex ? 'bg-pink-400' : 'bg-gray-200'}`;
-                slideIndicator.appendChild(dot);
-            });
+            slideIndicator.className = "flex justify-center items-center px-5 py-2 bg-gray-50 rounded-full border-2 border-dashed border-gray-200 shadow-inner";
+            
+            const numberText = document.createElement("span");
+            numberText.className = "text-xl md:text-2xl font-bold text-gray-400 tracking-widest font-sans";
+            // ex: 1 / 50
+            numberText.innerHTML = `<span class="text-pink-500">${currentIndex + 1}</span> / ${wordsList.length}`;
+            
+            slideIndicator.appendChild(numberText);
         }
 
         // 4. Render Word
