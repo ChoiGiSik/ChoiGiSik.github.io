@@ -128,9 +128,11 @@
         class="w-full max-w-2xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary relative z-20">
 
         <!-- Lesson Filter -->
-        <div class="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded-2xl border-2 border-dashed border-pink-200">
+        <div
+            class="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded-2xl border-2 border-dashed border-pink-200">
             <label for="lessonFilter" class="text-gray-600 font-bold text-lg sm:text-xl">📚 배울 강의 선택</label>
-            <select id="lessonFilter" class="bg-white border-2 border-pink-300 text-pink-600 rounded-xl px-4 py-2 text-lg font-bold focus:outline-none focus:ring-4 focus:ring-pink-100 cursor-pointer shadow-sm">
+            <select id="lessonFilter"
+                class="bg-white border-2 border-pink-300 text-pink-600 rounded-xl px-4 py-2 text-lg font-bold focus:outline-none focus:ring-4 focus:ring-pink-100 cursor-pointer shadow-sm">
                 <option value="ALL">전체 강의</option>
             </select>
         </div>
@@ -186,8 +188,18 @@
                 <!-- Example Sentence Box -->
                 <div
                     class="bg-pastel-purple rounded-2xl p-5 md:p-6 shadow-sm border-2 border-purple-200 hover:shadow-md transition-shadow">
-                    <h3 class="text-xl md:text-2xl text-purple-700 mb-3 flex items-center gap-2">
-                        <span class="text-2xl">📝</span> 문장으로 배워요!
+                    <h3
+                        class="text-xl md:text-2xl text-purple-700 mb-3 flex flex-wrap justify-between items-center w-full gap-2">
+                        <span class="flex items-center gap-2"><span class="text-2xl">📝</span> 문장으로 배워요!</span>
+                        <button id="sentenceTtsBtn"
+                            class="bg-purple-200 hover:bg-purple-300 text-purple-800 rounded-full p-2.5 transition-colors shadow-sm flex items-center justify-center flex-shrink-0"
+                            title="예문 발음 듣기">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
+                            </svg>
+                        </button>
                     </h3>
                     <p id="wordExampleEn"
                         class="text-2xl md:text-3xl text-gray-800 mb-2 font-sans font-bold tracking-tight">I ate a
@@ -222,11 +234,12 @@
 
     <!-- Simple interaction script with Slider -->
     <script>
-        // 1. Supabase Initialization & Data Fetching
+        // 1. Supabase Initialization
         const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let repeatCountConfig = 1; // DB에서 가져올 반복 횟수 기본값 1
         let allWordsRaw = []; // DB에서 가져온 원본 전체 데이터
         let wordsList = []; // 현재 필터링되어 화면에 표시할 데이터
         let currentIndex = 0;
@@ -239,6 +252,7 @@
         const wordExampleEn = document.getElementById("wordExampleEn");
         const wordExampleKo = document.getElementById("wordExampleKo");
         const ttsButton = document.getElementById("ttsButton");
+        const sentenceTtsBtn = document.getElementById("sentenceTtsBtn");
         const prevBtn = document.getElementById("prevBtn");
         const nextBtn = document.getElementById("nextBtn");
         const slideIndicator = document.getElementById("slideIndicator");
@@ -360,24 +374,65 @@
 
         // 6. Web Speech API for TTS
         let currentUtterance; // 전역 변수로 선언하여 모바일 Safari(iOS) 가비지 컬렉션에 의해 음성이 끊기는 버그 방지
+        let currentRepeatIndex = 0;
+        let isSpeaking = false;
 
-        if ('speechSynthesis' in window) {
-            ttsButton.addEventListener('click', () => {
-                // 이전에 재생 중이거나 대기/오류 상태인 음성을 완전히 강제 종료 및 초기화 (모바일 멈춤 버그 핵심 해결책)
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.resume();
+        function speakTextWithRepeat(text, maxRepeat, targetButton, speechRate = 0.9) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.resume();
 
-                currentUtterance = new SpeechSynthesisUtterance(wordsList[currentIndex].word);
+            currentRepeatIndex = 0;
+            isSpeaking = true;
+            targetButton.classList.add('animate-pulse');
+
+            function speakNext() {
+                if (!isSpeaking || currentRepeatIndex >= maxRepeat) {
+                    targetButton.classList.remove('animate-pulse');
+                    isSpeaking = false;
+                    return;
+                }
+
+                currentUtterance = new SpeechSynthesisUtterance(text);
                 currentUtterance.lang = 'en-US';
-                // 아이들에게 친근한 높은 톤의 속도로 설정
+                // 아이들에게 친근한 높은 톤 설정
                 currentUtterance.pitch = 1.3;
-                currentUtterance.rate = 0.9;
+                // 속도를 유동적으로 적용 (문장은 더 느리게)
+                currentUtterance.rate = speechRate;
+
+                currentUtterance.onend = () => {
+                    currentRepeatIndex++;
+                    // 다음 반복 전 0.6초 대기
+                    setTimeout(speakNext, 600);
+                };
+
+                currentUtterance.onerror = (e) => {
+                    console.error('TTS Error:', e);
+                    targetButton.classList.remove('animate-pulse');
+                    isSpeaking = false;
+                };
 
                 window.speechSynthesis.speak(currentUtterance);
+            }
 
-                // 버튼 피드백 애니메이션
-                ttsButton.classList.add('animate-pulse');
-                setTimeout(() => ttsButton.classList.remove('animate-pulse'), 1000);
+            speakNext();
+        }
+
+        if ('speechSynthesis' in window) {
+            // 메인 단어 듣기 (설정 횟수 반복)
+            ttsButton.addEventListener('click', () => {
+                const wordText = wordsList[currentIndex].word;
+                speakTextWithRepeat(wordText, repeatCountConfig, ttsButton, 0.9); // 단어는 살짝 경쾌하게
+            });
+
+            // 예문 듣기 (기본 1회, 문장이므로 좀 더 천천히)
+            sentenceTtsBtn.addEventListener('click', () => {
+                // HTML 태그(색상 하이라이팅 등) 제거를 위한 정규식
+                const rawExampleHtml = wordsList[currentIndex].exampleEn;
+                const cleanExampleText = rawExampleHtml.replace(/<[^>]*>?/gm, '');
+
+                if (cleanExampleText.trim() === "No data found in Supabase.") return;
+
+                speakTextWithRepeat(cleanExampleText, 1, sentenceTtsBtn, 0.5); // 0.7 속도 적용
             });
         }
 
@@ -387,6 +442,14 @@
                 // 초기에 흐리게 처리
                 resultArea.classList.remove("opacity-100");
                 resultArea.classList.add("opacity-50");
+
+                // Config 테이블에서 재생 횟수 가져오기
+                const configResponse = await supabaseClient.from('config').select('count');
+                console.log("Config response:", configResponse.data, configResponse.error);
+                if (configResponse.data && configResponse.data.length > 0 && configResponse.data[0].count) {
+                    repeatCountConfig = parseInt(configResponse.data[0].count, 10) || 1;
+                }
+                console.log("적용된 반복 재생 횟수:", repeatCountConfig);
 
                 const { data, error } = await supabaseClient.from('words').select('*').order('id', { ascending: true });
 
@@ -409,7 +472,7 @@
                     // 강의 목록 추출 및 드롭다운 세팅
                     populateLessonFilter();
                     applyLessonFilter();
-                    
+
                 } else {
                     // 데이터가 0건인 경우 안내 표시
                     showEmptyData();
@@ -433,7 +496,7 @@
         function populateLessonFilter() {
             // "ALL" 제외한 유니크 강의 목록
             const uniqueLessons = [...new Set(allWordsRaw.map(w => String(w.lesson)))];
-            
+
             // 현재 선택값 기억 (리렌더링 시 유지)
             const currentSelection = lessonFilter.value;
 
