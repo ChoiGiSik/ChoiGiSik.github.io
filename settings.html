@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학습 환경 설정 ⚙️</title>
+    <!-- Supabase JS 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 구글 폰트(Jua) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Jua', 'sans-serif'],
+                    },
+                    colors: {
+                        pastel: {
+                            bg: '#FFF8E7',
+                            primary: '#FFB6C1',
+                            secondary: '#AEE1E1',
+                            card: '#FFFFFF',
+                            green: '#D4EDDA',
+                            purple: '#E2D5F8',
+                            orange: '#FFD8A8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+        }
+        /* Custom Range Slider styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #10B981; /* emerald-500 */
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #AEE1E1;
+            border-radius: 4px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="bg-pastel-bg min-h-screen text-gray-800 flex flex-col items-center py-10 px-4 overflow-x-hidden relative">
+
+    <!-- Hamburger Menu Button -->
+    <button id="menuOpenBtn"
+        class="fixed top-4 left-4 sm:top-6 sm:left-6 z-30 p-2 sm:p-3 bg-white rounded-xl shadow-md border-2 border-emerald-200 text-emerald-500 hover:bg-emerald-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Slide-out Menu -->
+    <nav id="sideMenu"
+        class="fixed top-0 left-0 h-full w-64 bg-pastel-card shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-r-4 border-emerald-200">
+        <div class="p-6 border-b-2 border-dashed border-emerald-200 flex justify-between items-center bg-emerald-50">
+            <h2 class="text-2xl font-bold text-emerald-600">✨ 메뉴</h2>
+            <button id="menuCloseBtn" class="text-gray-400 hover:text-emerald-500 transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 text-xl">
+            <a href="index.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-pink-50 text-gray-700 hover:text-pink-600 transition-colors">
+                <span>🏠</span> 단어 학습 (홈)
+            </a>
+            <a href="add-word.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition-colors">
+                <span>➕</span> 단어 하나씩 추가
+            </a>
+            <a href="camera-word.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <span>📷</span> 사진으로 단어 캡처
+            </a>
+            <a href="delete-word.html"
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-gray-700 hover:text-red-500 transition-colors">
+                <span>🗑️</span> 단어 관리/삭제
+            </a>
+            <a href="settings.html"
+                class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 text-emerald-700 transition-colors shadow-sm border border-emerald-100 font-bold">
+                <span>⚙️</span> 학습 환경 설정
+            </a>
+        </div>
+    </nav>
+
+    <header class="text-center mb-8 mt-4">
+        <h1 class="text-3xl md:text-5xl font-bold text-emerald-500 drop-shadow-md pb-2">
+            학습 환경 설정 ⚙️
+        </h1>
+        <p class="text-lg md:text-xl mt-4 text-gray-500">듣기 횟수와 예문 읽어주는 속도를 내 마음대로!</p>
+    </header>
+
+    <main class="w-full max-w-xl bg-pastel-card rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pastel-secondary relative z-20">
+        
+        <div id="loading" class="text-center text-xl text-gray-400 py-10 animate-pulse">
+            설정 데이터를 불러오는 중이에요... ⏳
+        </div>
+
+        <div id="settingsContainer" class="hidden space-y-8">
+            
+            <!-- 단어 반복 듣기 횟수 -->
+            <div class="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200">
+                <label class="block text-blue-700 font-bold text-2xl mb-2 flex items-center gap-2">
+                    <span>🔁</span> 단어 반복 듣기 횟수
+                </label>
+                <p class="text-gray-500 mb-4">메인 단어 듣기 버튼(🔊)을 눌렀을 때, 몇 번 반복해서 들려줄까요?</p>
+                <div class="flex items-center gap-4 bg-white p-3 rounded-xl border border-blue-100">
+                    <input type="number" id="inputCount" min="1" max="10" value="1"
+                        class="w-full text-center text-3xl font-bold text-blue-600 outline-none">
+                    <span class="text-2xl text-gray-400 whitespace-nowrap">번</span>
+                </div>
+            </div>
+
+            <!-- 예문 읽기 속도 -->
+            <div class="bg-purple-50 p-5 rounded-2xl border-2 border-purple-200">
+                <label class="block text-purple-700 font-bold text-2xl mb-2 flex items-center gap-2">
+                    <span>🐢</span> 예문(문장) 읽기 속도
+                </label>
+                <p class="text-gray-500 mb-4">문장 듣기 버튼을 눌렀을 때의 빠르기를 조절해요. (기본: 0.5)</p>
+                
+                <div class="bg-white p-4 rounded-xl border border-purple-100">
+                    <div class="flex justify-between text-lg text-gray-400 mb-2 font-bold px-1">
+                        <span>거북이 (0.1)</span>
+                        <span id="speedValueDisplay" class="text-3xl text-purple-600">0.5</span>
+                        <span>토끼 (2.0)</span>
+                    </div>
+                    <input type="range" id="inputSpeed" min="0.1" max="2.0" step="0.1" value="0.5" class="w-full mt-2">
+                </div>
+            </div>
+
+            <!-- 하단 버튼 영역 -->
+            <div class="pt-4 border-t-2 border-dashed border-gray-200 flex justify-center">
+                <button id="saveBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl shadow-md hover:-translate-y-1 transition-all active:scale-95 text-2xl font-bold flex items-center gap-2">
+                    <span>💾</span> 설정 저장하기
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Supabase Initialization
+        const SUPABASE_URL = "https://garhzjqrzvagbhtbmxdk.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdhcmh6anFyenZhZ2JodGJteGRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0OTgsImV4cCI6MjA5MDc0MjQ5OH0.ZPk8KWSR0elGXUCOsgu7CADXG6PUxgx7IqE6m2QALRg";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Sidebar Navigation Logic
+        const menuOpenBtn = document.getElementById("menuOpenBtn");
+        const menuCloseBtn = document.getElementById("menuCloseBtn");
+        const sideMenu = document.getElementById("sideMenu");
+        const menuOverlay = document.getElementById("menuOverlay");
+
+        function toggleMenu(isOpen) {
+            if (isOpen) {
+                menuOverlay.classList.remove("hidden");
+                setTimeout(() => menuOverlay.classList.remove("opacity-0"), 10);
+                sideMenu.classList.remove("-translate-x-full");
+            } else {
+                menuOverlay.classList.add("opacity-0");
+                sideMenu.classList.add("-translate-x-full");
+                setTimeout(() => menuOverlay.classList.add("hidden"), 300);
+            }
+        }
+        menuOpenBtn.addEventListener('click', () => toggleMenu(true));
+        menuCloseBtn.addEventListener('click', () => toggleMenu(false));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
+
+        // State & DOM Elements
+        let existingConfigId = null; 
+        let hasExistingData = false; 
+
+        const loading = document.getElementById('loading');
+        const settingsContainer = document.getElementById('settingsContainer');
+        const inputCount = document.getElementById('inputCount');
+        const inputSpeed = document.getElementById('inputSpeed');
+        const speedValueDisplay = document.getElementById('speedValueDisplay');
+        const saveBtn = document.getElementById('saveBtn');
+
+        // 슬라이더 스크롤 이벤트 연동
+        inputSpeed.addEventListener('input', (e) => {
+            speedValueDisplay.textContent = parseFloat(e.target.value).toFixed(1);
+        });
+
+        // 2. Fetch Existing Config Data
+        async function fetchConfig() {
+            try {
+                const { data, error } = await supabaseClient.from('config').select('*').limit(1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    hasExistingData = true;
+                    existingConfigId = data[0].id; // id 컬럼이 있다고 가정 (없으면 undefined)
+                    
+                    if (data[0].count !== undefined) {
+                        inputCount.value = parseInt(data[0].count, 10);
+                    }
+                    if (data[0].speed !== undefined) {
+                        const speedVal = parseFloat(data[0].speed);
+                        inputSpeed.value = speedVal;
+                        speedValueDisplay.textContent = speedVal.toFixed(1);
+                    }
+                }
+            } catch (error) {
+                console.error("Config 로딩 실패:", error);
+                // 가져오기 실패해도 UI는 보여줍니다.
+            } finally {
+                loading.classList.add('hidden');
+                settingsContainer.classList.remove('hidden');
+            }
+        }
+
+        // 3. Save Config Data
+        async function saveConfig() {
+            const countVal = parseInt(inputCount.value, 10);
+            const speedVal = parseFloat(inputSpeed.value);
+
+            if (isNaN(countVal) || countVal < 1) {
+                alert("반복 횟수는 1 이상의 숫자를 입력해주세요!");
+                return;
+            }
+
+            const payload = {
+                count: countVal,
+                speed: speedVal
+            };
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<span>⏳</span> 저장 중...`;
+
+            try {
+                let error;
+
+                if (existingConfigId !== null && existingConfigId !== undefined) {
+                    // Update existing by ID
+                    const response = await supabaseClient
+                        .from('config')
+                        .update(payload)
+                        .eq('id', existingConfigId);
+                    error = response.error;
+                } else if (hasExistingData) {
+                    // Update existing without ID (update all rows as fallback)
+                    const response = await supabaseClient
+                        .from('config')
+                        .update(payload)
+                        .neq('count', -999); // 무조건 참이 되는 조건을 넣어 전체 행 업데이트 유도
+                    error = response.error;
+                } else {
+                    // Insert new (만약 기존 데이터가 아예 없었다면)
+                    const response = await supabaseClient
+                        .from('config')
+                        .insert([payload]);
+                    error = response.error;
+                }
+
+                if (error) throw error;
+
+                alert(`✅ 학습 환경 설정이 무사히 저장되었습니다!\n\n반복 횟수: ${countVal}회\n예문 속도: ${speedVal}`);
+                
+            } catch (err) {
+                console.error(err);
+                alert(`❌ 저장에 실패했습니다.\n${err.message}\n(Supabase RLS 설정이나 권한을 확인해주세요.)`);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<span>💾</span> 설정 저장하기`;
+            }
+        }
+
+        saveBtn.addEventListener('click', saveConfig);
+
+        // 초기 시작
+        document.addEventListener('DOMContentLoaded', fetchConfig);
+
+    </script>
+</body>
+</html>
