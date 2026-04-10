@@ -240,6 +240,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repeatCountConfig = 1; // DB에서 가져올 반복 횟수 기본값 1
+        let sentenceSpeedConfig = 0.5; // DB에서 가져올 예문 읽기 속도 기본값
         let allWordsRaw = []; // DB에서 가져온 원본 전체 데이터
         let wordsList = []; // 현재 필터링되어 화면에 표시할 데이터
         let currentIndex = 0;
@@ -432,7 +433,7 @@
 
                 if (cleanExampleText.trim() === "No data found in Supabase.") return;
 
-                speakTextWithRepeat(cleanExampleText, 1, sentenceTtsBtn, 0.5); // 0.7 속도 적용
+                speakTextWithRepeat(cleanExampleText, 1, sentenceTtsBtn, sentenceSpeedConfig); // 설정된 속도 적용
             });
         }
 
@@ -443,13 +444,18 @@
                 resultArea.classList.remove("opacity-100");
                 resultArea.classList.add("opacity-50");
 
-                // Config 테이블에서 재생 횟수 가져오기
-                const configResponse = await supabaseClient.from('config').select('count');
+                // Config 테이블에서 재생 횟수 및 속도 가져오기
+                const configResponse = await supabaseClient.from('config').select('count, speed');
                 console.log("Config response:", configResponse.data, configResponse.error);
-                if (configResponse.data && configResponse.data.length > 0 && configResponse.data[0].count) {
-                    repeatCountConfig = parseInt(configResponse.data[0].count, 10) || 1;
+                if (configResponse.data && configResponse.data.length > 0) {
+                    if (configResponse.data[0].count !== undefined) {
+                        repeatCountConfig = parseInt(configResponse.data[0].count, 10) || 1;
+                    }
+                    if (configResponse.data[0].speed !== undefined) {
+                        sentenceSpeedConfig = parseFloat(configResponse.data[0].speed) || 0.5;
+                    }
                 }
-                console.log("적용된 반복 재생 횟수:", repeatCountConfig);
+                console.log("적용된 반복 재생 횟수:", repeatCountConfig, "| 예문 읽기 속도:", sentenceSpeedConfig);
 
                 const { data, error } = await supabaseClient.from('words').select('*').order('id', { ascending: true });
 
