@@ -504,8 +504,8 @@
         }
 
         function populateLessonFilter() {
-            // "ALL" 제외한 유니크 강의 목록
-            const uniqueLessons = [...new Set(allWordsRaw.map(w => String(w.lesson)))];
+            // "ALL" 제외한 유니크 강의 목록 (가장 마지막에 등록된 강의가 위로 오도록 역순 정렬)
+            const uniqueLessons = [...new Set(allWordsRaw.map(w => String(w.lesson)).reverse())];
 
             // 현재 선택값 기억 (리렌더링 시 유지)
             const currentSelection = lessonFilter.value;
